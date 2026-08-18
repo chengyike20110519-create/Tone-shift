@@ -251,6 +251,43 @@ canvas#scene{position:fixed;inset:0;width:100%;height:100%;touch-action:none;z-i
 .reveal-caption{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;margin-top:4px}
 .twoP-reveal-actions{display:flex;justify-content:center;gap:12px;margin-top:8px}
 
+
+
+/* === 1.1 单人传声链 === */
+.one-shell{display:flex;flex-direction:column;align-items:stretch;gap:14px;max-width:780px;width:100%;padding:24px;overflow-y:auto}
+.one-title{font-size:20px;font-weight:700;margin-top:8px}
+.one-hint{font-size:12px;color:var(--muted);margin-bottom:6px}
+.one-pos-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%}
+@media (max-width:600px){.one-pos-grid{grid-template-columns:repeat(2,1fr)}}
+.one-pos-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--text);cursor:pointer;transition:all .15s ease;font-family:inherit}
+.one-pos-tile:hover{border-color:rgba(120,216,210,0.4)}
+.one-pos-tile.selected{background:rgba(120,216,210,0.15);border-color:var(--teal)}
+.one-pos-num{font-size:24px;font-weight:800;color:var(--teal)}
+.one-pos-task{font-size:11px;color:var(--muted);text-align:center;line-height:1.3}
+.one-pers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;width:100%}
+.one-pers-tile{padding:12px 14px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--text);cursor:pointer;text-align:left;transition:all .15s ease;font-family:inherit}
+.one-pers-tile:hover{border-color:rgba(120,216,210,0.4)}
+.one-pers-tile.selected{background:rgba(120,216,210,0.15);border-color:var(--teal)}
+.one-pers-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.one-pers-desc{font-size:11px;color:var(--muted);line-height:1.3}
+.one-start-row{display:flex;justify-content:center;margin-top:8px}
+.one-hop-header{padding:0;margin:0}
+.one-ai-shell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:80px 24px}
+.one-ai-pulse{position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center}
+.one-ai-orb{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 36% 34%,rgba(120,216,210,0.4),rgba(167,139,250,0.18) 48%,transparent 72%);animation:breathe 2s ease-in-out infinite}
+.one-ai-name{font-size:22px;font-weight:700;margin:0}
+.one-ai-task{font-size:14px;color:var(--muted);margin:0}
+.one-reveal-chain{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%}
+@media (max-width:700px){.one-reveal-chain{grid-template-columns:repeat(2,1fr)}}
+.one-reveal-card{padding:12px;border-radius:8px;background:var(--panel);border:1px solid var(--line)}
+.one-reveal-label{font-size:10px;color:var(--muted);letter-spacing:0.04em;margin-bottom:6px}
+.one-reveal-name{font-weight:700;font-size:12px}
+.one-reveal-words{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;min-height:24px}
+.one-reveal-words .word-chip{padding:3px 7px;border-radius:4px;background:rgba(120,216,210,0.2);color:var(--teal);font-weight:600;font-size:11px}
+.one-reveal-art{aspect-ratio:1.4;background:rgba(0,0,0,0.2);border-radius:4px;overflow:hidden;margin-top:4px}
+.one-reveal-art canvas{width:100%;height:100%;display:block}
+.one-reveal-voice{font-size:10px;color:rgba(120,216,210,0.7);font-style:italic;margin-top:4px;line-height:1.4}
+#oneCanvas{flex:1;min-height:300px;width:100%;background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:8px;touch-action:none;cursor:crosshair;display:block}
 </style>
 </head>
 <body>
@@ -471,6 +508,98 @@ canvas#scene{position:fixed;inset:0;width:100%;height:100%;touch-action:none;z-i
         </button>
         <button id="twoPRetryBtn" class="btn primary" type="button">再来一次</button>
         <button id="twoPHomeBtn" class="btn ghost" type="button">回到首页</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== 1.1 单人传声链 ===== -->
+  <section id="oneVsOneStartScreen" class="screen hidden">
+    <div class="one-shell">
+      <p class="kicker">单人传声 · 1.1</p>
+      <h2 class="one-title">选你的位置</h2>
+      <p class="one-hint">4 个位置里选 1 个，剩下的由 AI 听友填</p>
+      <div class="one-pos-grid" id="onePosGrid">
+        <button class="one-pos-tile" data-pos="0"><div class="one-pos-num">1</div><div class="one-pos-task">听歌选词</div></button>
+        <button class="one-pos-tile" data-pos="1"><div class="one-pos-num">2</div><div class="one-pos-task">看词画图</div></button>
+        <button class="one-pos-tile" data-pos="2"><div class="one-pos-num">3</div><div class="one-pos-task">看图选词</div></button>
+        <button class="one-pos-tile" data-pos="3"><div class="one-pos-num">4</div><div class="one-pos-task">看词画图</div></button>
+      </div>
+      <h2 class="one-title" style="margin-top:24px">选 2-3 个 AI 听友</h2>
+      <p class="one-hint">每个听友有自己的「听感偏好」，影响选词和画风</p>
+      <div class="one-pers-grid" id="onePersGrid">
+        <button class="one-pers-tile" data-personality="nostalgic"><div class="one-pers-name">怀旧收集者</div><div class="one-pers-desc">老歌和年代联想</div></button>
+        <button class="one-pers-tile" data-personality="rational"><div class="one-pers-name">理性乐评人</div><div class="one-pers-desc">更关注节奏和结构</div></button>
+        <button class="one-pers-tile" data-personality="visual"><div class="one-pers-name">视觉系玩家</div><div class="one-pers-desc">根据颜色和画面理解</div></button>
+        <button class="one-pers-tile" data-personality="absurd"><div class="one-pers-name">荒诞派</div><div class="one-pers-desc">产生搞笑但有趣的漂移</div></button>
+        <button class="one-pers-tile" data-personality="empathic"><div class="one-pers-name">共情型听众</div><div class="one-pers-desc">关注歌词和情绪</div></button>
+      </div>
+      <div class="one-start-row">
+        <button id="oneStartBtn" class="btn primary" disabled>开始 →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="oneWordHopScreen" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="one-hop-header">
+        <p class="kicker" id="oneWordHopKicker">位置 1 · 你的回合</p>
+        <h2 class="twoP-title">听歌，然后选 3 个词</h2>
+      </div>
+      <p class="twoP-hint">下面 37 个词，凭直觉点 3 个</p>
+      <div class="twoP-bank" id="oneWordBank"></div>
+      <div class="twoP-actions">
+        <p class="twoP-counter">已选 <span id="oneWordCount">0</span> / 3</p>
+        <button id="oneWordSubmitBtn" class="btn primary" disabled>传给下一位 →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="oneDrawHopScreen" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="one-hop-header">
+        <p class="kicker" id="oneDrawHopKicker">位置 2 · 你的回合</p>
+        <h2 class="twoP-title">看词画图</h2>
+      </div>
+      <div class="twoP-banner">
+        <p class="kicker" id="oneDrawHopInputLabel">上一位选了</p>
+        <div class="twoP-words" id="oneDrawHopWords"></div>
+      </div>
+      <div class="twoP-paint-wrap">
+        <div class="twoP-paint-tools">
+          <div class="timer-chip"><span id="oneDrawTime">30</span>s</div>
+          <div class="stroke-chip"><span id="oneDrawStrokes">0</span> / 15 笔</div>
+        </div>
+        <canvas id="oneCanvas"></canvas>
+        <div class="palette twoP-palette" id="onePalette"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="oneAIScreen" class="screen hidden">
+    <div class="one-ai-shell">
+      <div class="one-ai-pulse">
+        <div class="one-ai-orb"></div>
+      </div>
+      <p class="kicker" id="oneAiKicker">位置 2 · AI 听友</p>
+      <h2 class="one-ai-name" id="oneAiName">怀旧收集者</h2>
+      <p class="one-ai-task" id="oneAiTask">正在选词...</p>
+    </div>
+  </section>
+
+  <section id="oneRevealScreen" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="twoP-reveal-title">
+        <p class="kicker">单人传声 · 漂移</p>
+        <h2>你和 AI 听友的接力</h2>
+      </div>
+      <div class="one-reveal-chain" id="oneRevealChain"></div>
+      <p class="reveal-caption">4 跳接力 — 你在哪一格？</p>
+      <div class="twoP-reveal-actions">
+        <button id="onePlayMusicBtn" class="btn primary">▶ 听 20s 共创音乐</button>
+        <button id="oneDownloadBtn" class="btn ghost">下载图卡</button>
+        <button id="oneRetryBtn" class="btn ghost">再来一次</button>
+        <button id="oneHomeBtn" class="btn ghost">回到首页</button>
       </div>
     </div>
   </section>
@@ -1805,6 +1934,434 @@ $("twoPHomeBtn").addEventListener("click",function(){
   twoPReset();
   enterHub();
 });
+
+
+
+// === 1.1 单人传声链 (part 1: 数据 + 状态 + 链子逻辑) ===
+const PERSONALITIES={
+  nostalgic:{id:'nostalgic',name:'怀旧收集者',palette:[1,2,3],preferredWords:['信','旧照片','旧楼','灯塔','钟','窗','镜子','雨','雪','影子'],voiceLines:['这歌像 90 年代的港台流行','听着像老式磁带','让人想起 80 年代的校园'],drawStyle:'thick'},
+  rational:{id:'rational',name:'理性乐评人',palette:[4,5],preferredWords:['城市','钟','桥','影子','窗','草原','灯塔','长椅'],voiceLines:['结构是三段式','副歌在 1:30 左右','BPM 大约 90'],drawStyle:'geometric'},
+  visual:{id:'visual',name:'视觉系玩家',palette:[0,1,2,3,4,5],preferredWords:['光','雨','雪','太阳','月亮','镜子','海','火','草原','雨伞'],voiceLines:['画面是一片金黄','像燃烧的红色','像水底的蓝'],drawStyle:'bold'},
+  absurd:{id:'absurd',name:'荒诞派',palette:[0,1,2,3,4,5],preferredWords:['舞','钟','钥匙','酒','烟','长椅','月亮','影子','钟','钥匙'],voiceLines:['我觉得像一只鸭子','这歌闻起来是紫红色','像月球上的仙人掌'],drawStyle:'random'},
+  empathic:{id:'empathic',name:'共情型听众',palette:[0,1,2],preferredWords:['孤独','温柔','热烈','安静','离别','重逢','眼泪','信','背影','拥抱'],voiceLines:['这歌有点想哭','像一个人在深夜','像是告别'],drawStyle:'soft'}
+};
+
+const oneVsOne={
+  userPosition:-1,
+  hopPersonalities:['ai','ai','ai','ai'],
+  words:[[],[],[],[]],
+  strokes:[[],[],[],[]],
+  voiceLines:[],
+  hopIndex:0,
+  colorIndex:4,
+  drawing:false,
+  lastPoint:null,
+  currentStrokePoints:null,
+  strokeCount:0,
+  maxStrokes:15,
+  startTime:0,
+  timerId:null,
+  warned:false
+};
+
+function oneVsOneReset(){
+  if(oneVsOne.timerId){clearInterval(oneVsOne.timerId);oneVsOne.timerId=null;}
+  oneVsOne.userPosition=-1;
+  oneVsOne.hopPersonalities=['ai','ai','ai','ai'];
+  oneVsOne.words=[[],[],[],[]];
+  oneVsOne.strokes=[[],[],[],[]];
+  oneVsOne.voiceLines=[];
+  oneVsOne.hopIndex=0;
+  oneVsOne.colorIndex=4;
+  oneVsOne.drawing=false;
+  oneVsOne.lastPoint=null;
+  oneVsOne.currentStrokePoints=null;
+  oneVsOne.strokeCount=0;
+  oneVsOne.warned=false;
+}
+
+function startOneVsOne(){
+  var posEl=document.querySelector(".one-pos-tile.selected");
+  var persEls=document.querySelectorAll(".one-pers-tile.selected");
+  if(!posEl||persEls.length<2) return;
+  oneVsOneReset();
+  oneVsOne.userPosition=parseInt(posEl.getAttribute("data-pos"));
+  var selectedIds=[];
+  for(var i=0;i<persEls.length;i++) selectedIds.push(persEls[i].getAttribute("data-personality"));
+  var aiIdx=0;
+  for(var j=0;j<4;j++){
+    if(j===oneVsOne.userPosition){oneVsOne.hopPersonalities[j]='user';}
+    else{oneVsOne.hopPersonalities[j]=selectedIds[aiIdx%selectedIds.length];aiIdx++;}
+  }
+  show("oneVsOneStartScreen").classList.add("hidden");
+  showHop(0);
+}
+
+function showHop(hopIndex){
+  if(hopIndex>3){showOneVsOneReveal();return;}
+  oneVsOne.hopIndex=hopIndex;
+  var isUser=(oneVsOne.hopPersonalities[hopIndex]==='user');
+  var isWordHop=(hopIndex===0||hopIndex===2);
+  if(isUser){
+    if(isWordHop){
+      show("oneWordHopScreen");
+      $("oneWordHopKicker").textContent="位置 "+(hopIndex+1)+" · 你的回合 · 听歌选词";
+      oneVsOne.words[hopIndex]=[];
+      $("oneWordCount").textContent="0";
+      $("oneWordSubmitBtn").disabled=true;
+      renderOneWordBank();
+      if(hopIndex===0){
+        if(!state.songBuffer){if(typeof initAudio==="function") initAudio();}
+        if(state.audioCtx){
+          if(state.audioCtx.state==="suspended") state.audioCtx.resume();
+          if(typeof startSong==="function") startSong(0);
+        }
+      }
+    }else{
+      show("oneDrawHopScreen");
+      $("oneDrawHopKicker").textContent="位置 "+(hopIndex+1)+" · 你的回合 · 看词画图";
+      var prevWords=oneVsOne.words[hopIndex-1]||[];
+      var wordsEl=$("oneDrawHopWords");
+      wordsEl.innerHTML="";
+      prevWords.forEach(function(w){
+        var chip=document.createElement("span");
+        chip.className="word-chip";chip.textContent=w;
+        wordsEl.appendChild(chip);
+      });
+      setupOneCanvas();renderOnePalette();
+      oneVsOne.strokes[hopIndex]=[];
+      oneVsOne.strokeCount=0;
+      $("oneDrawStrokes").textContent="0";
+      $("oneDrawTime").textContent="30";
+      $("oneDrawStrokes").parentElement.classList.remove("warn","full");
+      oneVsOne.startTime=Date.now();
+      if(oneVsOne.timerId) clearInterval(oneVsOne.timerId);
+      oneVsOne.timerId=setInterval(function(){
+        var left=30-Math.floor((Date.now()-oneVsOne.startTime)/1000);
+        if(left<=0){$("oneDrawTime").textContent="0";finishOneDraw();}
+        else{$("oneDrawTime").textContent=left;if(left<=5&&!oneVsOne.warned){$("oneDrawTime").parentElement.classList.add("warn");oneVsOne.warned=true;}}
+      },250);
+    }
+  }else{
+    var personality=PERSONALITIES[oneVsOne.hopPersonalities[hopIndex]];
+    show("oneAIScreen");
+    $("oneAiName").textContent=personality.name;
+    $("oneAiTask").textContent=isWordHop?"正在选词...":"正在画图...";
+    $("oneAiKicker").textContent="位置 "+(hopIndex+1)+" · AI 听友";
+    setTimeout(function(){
+      if(isWordHop){
+        var prevWords=[];
+        for(var k=0;k<hopIndex;k++){if(oneVsOne.words[k]) prevWords=prevWords.concat(oneVsOne.words[k]);}
+        oneVsOne.words[hopIndex]=pickAIWords(personality,prevWords);
+        oneVsOne.voiceLines[hopIndex]=pickVoiceLine(personality);
+      }else{
+        oneVsOne.strokes[hopIndex]=aiDraw(personality);
+        oneVsOne.voiceLines[hopIndex]=pickVoiceLine(personality);
+      }
+      showHop(hopIndex+1);
+    },1500);
+  }
+}
+
+
+// === 1.1 part 2: AI 选词 / AI 画图 / 画板 / 揭晓 / 音乐 / 事件绑定 ===
+
+function pickAIWords(personality,excludeWords){
+  var picks=[];
+  var allWords=WORD_BANK.filter(function(w){return excludeWords.indexOf(w)<0;});
+  var preferredLeft=personality.preferredWords.filter(function(w){return excludeWords.indexOf(w)<0;});
+  while(picks.length<3 && (allWords.length>0||preferredLeft.length>0)){
+    var fromPreferred=preferredLeft.length>0 && Math.random()<0.6;
+    var pool=fromPreferred?preferredLeft:allWords;
+    if(pool.length===0) pool=preferredLeft.length>0?preferredLeft:allWords;
+    var word=pool[Math.floor(Math.random()*pool.length)];
+    if(picks.indexOf(word)<0) picks.push(word);
+    allWords=allWords.filter(function(w){return w!==word;});
+    preferredLeft=preferredLeft.filter(function(w){return w!==word;});
+  }
+  return picks;
+}
+
+function pickVoiceLine(personality){
+  return personality.voiceLines[Math.floor(Math.random()*personality.voiceLines.length)];
+}
+
+function aiDraw(personality){
+  var numStrokes=4+Math.floor(Math.random()*9);
+  var strokes=[];
+  for(var i=0;i<numStrokes;i++){
+    var colorIdx=personality.palette[Math.floor(Math.random()*personality.palette.length)];
+    var color=PALETTE[colorIdx].color;
+    strokes.push(generateAIStroke(color,personality.drawStyle));
+  }
+  return strokes;
+}
+
+function generateAIStroke(color,style){
+  var W=600,H=400,points=[];
+  if(style==='thick'){
+    var sx=100+Math.random()*(W-200),sy=100+Math.random()*(H-200);
+    var n=2+Math.floor(Math.random()*3);
+    for(var i=0;i<n;i++) points.push({x:sx+i*60,y:sy+(Math.random()-0.5)*20});
+  }else if(style==='geometric'){
+    var sx=100+Math.random()*(W-200),sy=100+Math.random()*(H-200);
+    var dx=(Math.random()-0.5)*200,dy=(Math.random()-0.5)*200;
+    points=[{x:sx,y:sy},{x:sx+dx,y:sy+dy}];
+  }else if(style==='bold'){
+    var sx=100+Math.random()*(W-200),sy=100+Math.random()*(H-200);
+    var n=3+Math.floor(Math.random()*4);
+    for(var i=0;i<n;i++) points.push({x:sx+(Math.random()-0.5)*200,y:sy+(Math.random()-0.5)*150});
+  }else if(style==='random'){
+    var n=5+Math.floor(Math.random()*6);
+    for(var i=0;i<n;i++) points.push({x:Math.random()*W,y:Math.random()*H});
+  }else if(style==='soft'){
+    var cx=100+Math.random()*(W-200),cy=100+Math.random()*(H-200);
+    var r=50+Math.random()*100,a0=Math.random()*Math.PI*2;
+    var n=8+Math.floor(Math.random()*6);
+    for(var i=0;i<n;i++){var a=a0+(i/n)*Math.PI*2;points.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r});}
+  }else{
+    for(var i=0;i<5;i++) points.push({x:Math.random()*W,y:Math.random()*H});
+  }
+  return {color:color,points:points};
+}
+
+function renderOneWordBank(){
+  var bank=$("oneWordBank");
+  bank.innerHTML="";
+  var hopIdx=oneVsOne.hopIndex;
+  WORD_BANK.forEach(function(word){
+    var btn=document.createElement("button");
+    btn.className="word-btn";btn.type="button";btn.textContent=word;
+    btn.addEventListener("click",function(){
+      var cur=oneVsOne.words[hopIdx];
+      var idx=cur.indexOf(word);
+      if(idx>=0){cur.splice(idx,1);btn.classList.remove("selected");}
+      else if(cur.length<3){cur.push(word);btn.classList.add("selected");}
+      var allBtns=bank.querySelectorAll(".word-btn");
+      allBtns.forEach(function(b){
+        if(cur.indexOf(b.textContent)<0 && cur.length>=3){b.setAttribute("disabled","");}
+        else{b.removeAttribute("disabled");}
+      });
+      $("oneWordCount").textContent=cur.length;
+      $("oneWordSubmitBtn").disabled=cur.length!==3;
+    });
+    bank.appendChild(btn);
+  });
+}
+
+function submitOneWords(){if(oneVsOne.words[oneVsOne.hopIndex].length!==3) return;showHop(oneVsOne.hopIndex+1);}
+
+let oneW=0,oneH=0,oneCanvasEl=null,oneCtxEl=null,oneDPR=1,oneListenersBound=false;
+
+function setupOneCanvas(){
+  oneCanvasEl=$("oneCanvas");
+  oneCtxEl=oneCanvasEl.getContext("2d");
+  oneDPR=Math.min(window.devicePixelRatio||1,2);
+  var rect=oneCanvasEl.getBoundingClientRect();
+  oneW=rect.width;oneH=rect.height;
+  oneCanvasEl.width=Math.round(oneW*oneDPR);
+  oneCanvasEl.height=Math.round(oneH*oneDPR);
+  oneCtxEl.setTransform(oneDPR,0,0,oneDPR,0,0);
+  oneCtxEl.clearRect(0,0,oneW,oneH);
+  oneVsOne.currentStrokePoints=null;
+  if(oneListenersBound) return;
+  oneListenersBound=true;
+  function getPos(e){
+    var r=oneCanvasEl.getBoundingClientRect();
+    var t=e.touches?e.touches[0]:e;
+    return {x:t.clientX-r.left,y:t.clientY-r.top};
+  }
+  function onDown(e){
+    e.preventDefault();
+    if(oneVsOne.hopIndex!==1 && oneVsOne.hopIndex!==3) return;
+    if(oneVsOne.userPosition!==oneVsOne.hopIndex) return;
+    if(oneVsOne.strokeCount>=oneVsOne.maxStrokes) return;
+    oneVsOne.drawing=true;
+    oneVsOne.lastPoint=getPos(e);
+    oneVsOne.currentStrokePoints=[{x:oneVsOne.lastPoint.x,y:oneVsOne.lastPoint.y}];
+  }
+  function onMove(e){
+    if(!oneVsOne.drawing) return;
+    e.preventDefault();
+    var p=getPos(e);
+    drawOneSegment(oneVsOne.lastPoint,p);
+    oneVsOne.currentStrokePoints.push({x:p.x,y:p.y});
+    oneVsOne.lastPoint=p;
+  }
+  function onUp(){
+    if(!oneVsOne.drawing) return;
+    oneVsOne.drawing=false;
+    var stroke={color:PALETTE[oneVsOne.colorIndex].color,points:oneVsOne.currentStrokePoints};
+    oneVsOne.strokes[oneVsOne.hopIndex].push(stroke);
+    oneVsOne.currentStrokePoints=null;oneVsOne.lastPoint=null;
+    oneVsOne.strokeCount++;
+    $("oneDrawStrokes").textContent=oneVsOne.strokeCount;
+    if(oneVsOne.strokeCount>=oneVsOne.maxStrokes){
+      $("oneDrawStrokes").parentElement.classList.add("full");
+      setTimeout(finishOneDraw,400);
+    }
+  }
+  oneCanvasEl.addEventListener("mousedown",onDown);
+  oneCanvasEl.addEventListener("mousemove",onMove);
+  window.addEventListener("mouseup",onUp);
+  oneCanvasEl.addEventListener("touchstart",onDown,{passive:false});
+  oneCanvasEl.addEventListener("touchmove",onMove,{passive:false});
+  oneCanvasEl.addEventListener("touchend",onUp);
+}
+
+function drawOneSegment(a,b){
+  var color=PALETTE[oneVsOne.colorIndex].color;
+  oneCtxEl.lineCap="round";oneCtxEl.lineJoin="round";
+  oneCtxEl.strokeStyle=hexA(color,0.55);oneCtxEl.lineWidth=6;
+  oneCtxEl.beginPath();oneCtxEl.moveTo(a.x,a.y);oneCtxEl.lineTo(b.x,b.y);
+  oneCtxEl.stroke();
+}
+
+function renderOnePalette(){
+  var pal=$("onePalette");
+  pal.innerHTML="";
+  PALETTE.forEach(function(p,i){
+    var s=document.createElement("div");
+    s.className="swatch"+(i===oneVsOne.colorIndex?" active":"");
+    s.style.background=p.color;
+    s.addEventListener("click",function(){
+      oneVsOne.colorIndex=i;
+      pal.querySelectorAll(".swatch").forEach(function(el,j){el.classList.toggle("active",j===i);});
+    });
+    pal.appendChild(s);
+  });
+}
+
+function finishOneDraw(){
+  if(oneVsOne.timerId){clearInterval(oneVsOne.timerId);oneVsOne.timerId=null;}
+  showHop(oneVsOne.hopIndex+1);
+}
+
+function showOneVsOneReveal(){
+  show("oneRevealScreen");
+  var chain=$("oneRevealChain");chain.innerHTML="";
+  for(var i=0;i<4;i++){
+    var card=document.createElement("div");card.className="one-reveal-card";
+    var label=document.createElement("div");label.className="one-reveal-label";
+    var isUser=(oneVsOne.hopPersonalities[i]==='user');
+    if(isUser){label.innerHTML="位置 "+(i+1)+" · <span class='one-reveal-name' style='color:var(--teal)'>你</span>";}
+    else{var pn=PERSONALITIES[oneVsOne.hopPersonalities[i]].name;label.innerHTML="位置 "+(i+1)+" · <span class='one-reveal-name'>"+pn+"</span>";}
+    card.appendChild(label);
+    if(i===0||i===2){
+      var we=document.createElement("div");we.className="one-reveal-words";
+      (oneVsOne.words[i]||[]).forEach(function(w){
+        var c=document.createElement("span");c.className="word-chip";c.textContent=w;we.appendChild(c);
+      });
+      card.appendChild(we);
+    }else{
+      var ae=document.createElement("div");ae.className="one-reveal-art";
+      var cv=document.createElement("canvas");cv.width=300;cv.height=200;ae.appendChild(cv);card.appendChild(ae);
+      (function(canvas,strokes){
+        setTimeout(function(){
+          var ctx=canvas.getContext("2d");ctx.clearRect(0,0,300,200);
+          var sW=oneW||600,sH=oneH||400;
+          var sc=Math.min(280/sW,180/sH);
+          var oX=(300-sW*sc)/2,oY=(200-sH*sc)/2;
+          ctx.save();ctx.translate(oX,oY);ctx.scale(sc,sc);
+          strokes.forEach(function(s){
+            if(!s.points||s.points.length<2) return;
+            for(var j=1;j<s.points.length;j++){
+              var a=s.points[j-1],b=s.points[j];
+              ctx.lineCap="round";ctx.lineJoin="round";
+              ctx.strokeStyle=hexA(s.color,0.55);ctx.lineWidth=6;
+              ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+            }
+          });
+          ctx.restore();
+        },50);
+      })(cv,oneVsOne.strokes[i]||[]);
+    }
+    if(!isUser && oneVsOne.voiceLines[i]){
+      var v=document.createElement("div");v.className="one-reveal-voice";
+      v.textContent="「"+oneVsOne.voiceLines[i]+"」";card.appendChild(v);
+    }
+    chain.appendChild(card);
+  }
+}
+
+function playOneVsOneMusic(){
+  var allStrokes=[];
+  if(oneVsOne.strokes[1]) allStrokes=allStrokes.concat(oneVsOne.strokes[1]);
+  if(oneVsOne.strokes[3]) allStrokes=allStrokes.concat(oneVsOne.strokes[3]);
+  if(!allStrokes.length) return;
+  if(!state.audioCtx){if(typeof initAudio==="function") initAudio();}
+  if(!state.audioCtx) return;
+  if(state.audioCtx.state==="suspended") state.audioCtx.resume();
+  var ctx=state.audioCtx;var dur=20;var srcH=oneH||400;
+  var TIMBRES={"#ff6b6b":"triangle","#ffb36b":"sine","#ffd977":"sine","#5eead4":"sine","#5b8cff":"sawtooth","#b39ddb":"triangle"};
+  var SCALE=[220,261.63,293.66,329.63,392,440,523.25,587.33];
+  var kick=ctx.createOscillator();var kg=ctx.createGain();
+  kick.type="sine";kick.frequency.value=110;
+  var kt=ctx.currentTime;
+  kg.gain.setValueAtTime(0,kt);kg.gain.linearRampToValueAtTime(0.18,kt+0.04);kg.gain.exponentialRampToValueAtTime(0.001,kt+0.35);
+  kick.connect(kg);kg.connect(ctx.destination);kick.start(kt);kick.stop(kt+0.4);
+  allStrokes.forEach(function(stroke,i){
+    if(!stroke.points||stroke.points.length<2) return;
+    var avgY=stroke.points.reduce(function(s,p){return s+p.y;},0)/stroke.points.length;
+    var yRatio=1-(avgY/srcH);
+    var ni=Math.max(0,Math.min(SCALE.length-1,Math.floor(yRatio*SCALE.length)));
+    var freq=SCALE[ni];
+    var wf=TIMBRES[stroke.color]||"sine";
+    var len=stroke.points.length;
+    var amp=Math.min(0.3,0.1+len*0.004);
+    var time=(i/allStrokes.length)*dur;
+    var osc=ctx.createOscillator();var g=ctx.createGain();
+    osc.type=wf;osc.frequency.value=freq;
+    var t=ctx.currentTime+time;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(amp,t+0.04);g.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+    osc.connect(g);g.connect(ctx.destination);osc.start(t);osc.stop(t+0.6);
+  });
+}
+
+// === 1.1 事件绑定 ===
+document.querySelectorAll(".one-pos-tile").forEach(function(tile){
+  tile.addEventListener("click",function(){
+    document.querySelectorAll(".one-pos-tile").forEach(function(t){t.classList.remove("selected");});
+    tile.classList.add("selected");
+    checkOneStartBtn();
+  });
+});
+
+document.querySelectorAll(".one-pers-tile").forEach(function(tile){
+  tile.addEventListener("click",function(){
+    var wasSelected=tile.classList.contains("selected");
+    if(wasSelected){tile.classList.remove("selected");}
+    else{
+      var count=document.querySelectorAll(".one-pers-tile.selected").length;
+      if(count<3) tile.classList.add("selected");
+    }
+    checkOneStartBtn();
+  });
+});
+
+function checkOneStartBtn(){
+  var posSelected=document.querySelectorAll(".one-pos-tile.selected").length===1;
+  var persCount=document.querySelectorAll(".one-pers-tile.selected").length;
+  $("oneStartBtn").disabled=!(posSelected && persCount>=2);
+}
+
+$("oneStartBtn").addEventListener("click",startOneVsOne);
+$("oneWordSubmitBtn").addEventListener("click",submitOneWords);
+$("onePlayMusicBtn").addEventListener("click",function(){
+  playOneVsOneMusic();
+  var btn=$("onePlayMusicBtn");
+  btn.disabled=true;btn.innerHTML="播放中…";
+  setTimeout(function(){btn.disabled=false;btn.innerHTML="▶ 听 20s 共创音乐";},21000);
+});
+$("oneDownloadBtn").addEventListener("click",function(){alert("v0.1 暂未实现 1.1 图卡，先听 20s 共创音乐。");});
+$("oneRetryBtn").addEventListener("click",function(){
+  oneVsOneReset();
+  document.querySelectorAll(".one-pos-tile.selected").forEach(function(t){t.classList.remove("selected");});
+  document.querySelectorAll(".one-pers-tile.selected").forEach(function(t){t.classList.remove("selected");});
+  show("oneVsOneStartScreen");checkOneStartBtn();
+});
+$("oneHomeBtn").addEventListener("click",function(){oneVsOneReset();enterHub();});
+
 
 })();
 </script>
