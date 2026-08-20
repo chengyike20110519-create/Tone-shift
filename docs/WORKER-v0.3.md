@@ -22,7 +22,7 @@
       ▼                       ▼
 ┌─────────────────────────────────────┐
 │   Cloudflare Worker (双入口)        │
-│   ① 静态文件（index.html）         │
+│   ① 静态文件（index-modular.html）  │
 │   ② API（/api/rooms/*）            │
 └──────────────┬──────────────────────┘
                │
@@ -35,15 +35,16 @@
 ```
 
 **关键点**：
-- **Worker 同时托管静态 + API**。index.html 部署到 Workers Assets / Pages，API 在同一个 Worker 里。
-- **不用 Pages + 单独 Worker**。一个 Worker 搞定，减少域名和部署复杂度。
+- **Worker 同时托管静态 + API**。index-modular.html 部署到 Workers Assets / Pages，API 在同一个 Worker 里。
+- **不用 Pages + 单独 Worker**。一个 Worker搞定，减少部署复杂度。
 - **不用 Durable Objects**。2-4 人的房间状态简单、读多写少，KV 够用。
+- **🔧 TODO (v0.4)**：把"房间流"扩展到"内容生成流"（AI 听友生成需要 Worker 调用 LLM），届时再加 Durable Objects 做"生成配额"控制。
 
 ---
 
 ## 3. 房间数据模型
 
-KV 里存的是 **JSON 序列化的 room 对象**，key = 房间 ID（8 位 nanoid）。
+KV 里存的是 **JSON 序列化的 room 对象**，key = `room:<8位 nanoid>`。
 
 ```ts
 type Room = {
@@ -84,6 +85,7 @@ type StrokeData = {
 | `GET` | `/api/rooms/:id` | 查询当前状态 | 10/分钟/IP |
 | `PUT` | `/api/rooms/:id/step` | 推进到下一阶段（带角色校验） | 5/分钟/IP |
 | `POST` | `/api/rooms/:id/abandon` | 房主主动结束 | — |
+| `GET` | `/api/history/:token` | 拉历史完成房间（v0.3+ 持久化） | — |
 
 ### 4.1 创建房间
 
@@ -93,7 +95,7 @@ Content-Type: application/json
 Body: { "mode": "two-player" }
 
 200 OK
-{ "id": "aB3xY7qZ", "expiresAt": 1692288000000, "shareUrl": "https://shenghen.example/?room=aB3xY7qZ" }
+{ "id": "aB3xY7qZ", "expiresAt": 1692288000000, "shareUrl": "https://sheng.example.com/?room=aB3xY7qZ" }
 ```
 
 ### 4.2 推进阶段
@@ -115,9 +117,64 @@ Body: { "role": "a", "step": "a-pick", "data": { "aWords": ["雨","夜","长椅"
 v0.3 用 **轮询**（3 秒一次 GET），简单、零依赖。  
 v0.4 再考虑 WebSocket / Server-Sent Events，**等 4p 上线 + 真实用户有"等待焦虑"反馈再说**。
 
+> **🔧 TODO (v0.4)**：1.1 单人传声链是真"伪多入"—— 4 跳里有 3 跳是 AI 听友生成、1 跳是用户。v0.3 之后需要设计 "AI 听友生成请求" 的接口（每个 hop 之间调用 Worker 拿 AI 生成的词 / 画），前端不再写死 `PERSONALITIES`。这是后端从「房间流」扩展到「内容生成流」的关键升级。
+
+### 4.4 定时清理（重要：用 Triggers，不是 setTimeout / cron in Worker code）
+
+Cloudflare Worker **没有原生 cron**。要周期清理过期 KV 房间，必须用 **Workers Triggers**（"Cron Triggers"）。
+
+#### 4.4.1 配法
+
+`wrangler.toml` 里加：
+
+```toml
+[triggers]
+crons = ["0 */6 * * *"]   # 每 6 小时跑一次
+```
+
+#### 4.4.2 实现
+
+在 `src/index.ts` 里加一个 `scheduled` handler：
+
+```ts
+export default {
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(sweepExpiredRooms(env));
+  },
+  async fetch(request: Request, env: Env) { /* ... */ }
+};
+
+async function sweepExpiredRooms(env: Env) {
+  const now = Date.now();
+  const list = await env.ROOMS.list({ prefix: "room:" });
+  await Promise.all(list.keys.map(async (k) => {
+    const v = await env.ROOMS.get(k.name);
+    if (!v) return;
+    const room = JSON.parse(v);
+    if (room.expiresAt < now) await env.ROOMS.delete(k.name);
+  }));
+}
+```
+
+**注意**：cron 触发器**只在付费 Workers 计划上能用**—— Free 计划没有 cron。要么付费（$5/月），要么改成"惰性删除"：GET `/api/rooms/:id` 时检查 `expiresAt`，过期就直接返回 404 + delete。Free 计划推荐用惰性删除。
+
+### 4.5 持久化模型（修复设计原则失守）
+
+README 的设计原则第一条是"留住那些歌"，但 KV 24h TTL = 房间过期数据消失 = 失守。修复方案：
+
+**v0.3 最小修复**：完成后的房间状态（两人都画完了）写入另一个 KV 命名空间 `HISTORY`（30 天 TTL），前端 `/api/history/:token` 拉取历史列表。
+
+**v0.4 完整修复**：暴露"下载图卡"按钮（前端已有），同时 KV 保留最少 30 天副本，用户可一键"恢复我的声痕"。
+
+**v1.0 完整修复**：上 Durable Objects 做长存，按用户 hashed id 索引。
+
+> 当前 v0.3 设计稿未包含持久化逻辑，**实现前需要补这一段**，否则设计原则失守。
+
 ---
 
 ## 5. 客户端流程
+
+> **⚠️ 设计稿原本是为「双人传声专用后端」写的。** v0.3 真正落地时需要扩展为通用房间流（覆盖 1.1 单人传声的 AI 听友生成、未来的 1.2 记忆考古候选歌检索）。当前文件是 v0.3 起步线，扩展时的改动标注为 🔧 TODO。
 
 ### 5.1 A 创建房间
 
@@ -144,7 +201,7 @@ status === 'reveal' 时跳转揭晓页
 ```
 [链接] ?room=aB3x7qZ
   ↓
-[index.html] 解析 URL → 拿到 roomId
+[index-modular.html] 解析 URL → 拿到 roomId
   ↓
 GET /api/rooms/:id → 验证房间存在 + 状态 = 'waiting-b' 或 'waiting-a'
   ↓
@@ -172,7 +229,7 @@ PUT /api/rooms/:id/step {role: 'b', step: 'b-done', data: {...}}
 ### 6.1 房间 ID
 - 8 位 nanoid = 64^8 ≈ 2.8 × 10^14 组合
 - 不可枚举（实际只能被分享，不能被猜到）
-- TTL 24h，cron 清理
+- TTL 24h，cron 清理（见 4.4）
 
 ### 6.2 角色防伪
 - A 的创建请求不验证身份（任何人可以创建）
@@ -193,22 +250,33 @@ PUT /api/rooms/:id/step {role: 'b', step: 'b-done', data: {...}}
 
 ## 7. 成本估算（Cloudflare Free Tier）
 
-| 资源 | 免费额度 | 2p 项目预估用量 | 余量 |
+| 资源 | 免费额度 | 2p 项目预估用量（修正后） | 余量 |
 |---|---|---|---|
-| Worker 请求 | 100,000/天 | ~500/天（1000 房间/天 × 30 请求/房间） | 充足 |
+| Worker 请求 | 100,000/天 | ~6K/天（**1000 房间/天 × 6 关键请求** = create + 2 step + reveal + 3 polls × 2 人） | 充足 |
 | Worker CPU | 10ms/请求 | < 5ms（纯 KV 读写） | 充足 |
-| KV 读 | 10M/天 | ~30K/天 | 充足 |
-| KV 写 | 1M/天 | ~3K/天 | 充足 |
+| KV 读 | 10M/天 | ~200K/天（**轮询 3s × 5 分钟/房间 × 2 人 × 1000 房间/天**）| **5% — 临界** |
+| KV 写 | 1M/天 | ~6K/天 | 充足 |
 | KV 存储 | 1GB | ~50MB（10000 历史房间） | 充足 |
 
-**结论**：v0.3 跑在免费档完全够用。日活 1000 以内不用担心。
+**结论**：v0.3 在免费档**勉强够用**，但 KV 读余量很紧。
+
+### 7.1 优化措施（v0.3 上线前必须做）
+
+1. **轮询退避**：B 进入房间后改为 5s/10s/15s 指数退避，避免 2 个客户端同节奏轮询。
+2. **ETag / If-None-Match**：GET 返回 304 Not Modified，省一次完整序列化。
+3. **reveal 后停止轮询**：`status === 'reveal'` 客户端立即停 GET。
+4. **WebSocket 升级**：v0.4 改 SSE / WebSocket，从根本上把读压降为 0。
+
+### 7.2 原稿勘误（自批）
+
+原稿第 7 节写 "1000 房间 × 30 请求 = 30K KV 读/天"，但 4.3 节写"3s 一次轮询"。5 分钟画图 = 100 次 GET/房间。1000 房间 × 100 GET = 100K/天，**原稿低估了 3.3 倍**。上表已按修正后口径填写。
 
 ---
 
 ## 8. 不在范围内（v0.3 不做）
 
 - ❌ 账号系统 / 用户登录
-- ❌ 历史记录 / 个人收藏
+- ❌ 历史记录 / 个人收藏（v0.4+ 上，见 4.5）
 - ❌ 实时多人（>2 人）
 - ❌ 内容审核
 - ❌ 数据分析
@@ -221,7 +289,7 @@ PUT /api/rooms/:id/step {role: 'b', step: 'b-done', data: {...}}
 ```
 Day 1:  Worker + KV 基础
         ├─ wrangler init
-        ├─ 创建 KV namespace ROOMS
+        ├─ 创建 KV namespace ROOMS + HISTORY
         ├─ 实现 POST /api/rooms（创建）
         └─ 实现 GET /api/rooms/:id（查询）
 
@@ -230,29 +298,29 @@ Day 2:  推进逻辑
         ├─ 实现状态机校验（角色 + 步骤顺序）
         └─ 实现 DELETE /api/rooms/:id（主动结束）
 
-Day 3:  前端集成
+Day 3:  持久化 + 清理
+        ├─ 完成态房间写入 HISTORY 命名空间（30 天 TTL）
+        ├─ 实现惰性过期删除（GET 时检查 expiresAt）
+        ├─ [可选] 实现 scheduled handler + cron 触发器
+
+Day 4:  前端集成
         ├─ 拆分 enterTwoP → enterTwoPCreate / enterTwoPJoin
         ├─ 加"分享二维码"组件（用 qrcode.js CDN 或自己画）
-        ├─ 加轮询逻辑（3s 一次 GET）
-        └─ 揭晓页加"等 A 查看"状态
+        ├─ 加轮询逻辑（5s 起步 + 指数退避）
+        └─ 揭晓页加"等 A 查看"状态 + reveal 后停轮询
 
-Day 4:  部署 + 联调
+Day 5:  部署 + 联调
         ├─ 部署 Worker 到 Cloudflare
         ├─ 绑定自定义域名（如果买了）
         ├─ 手机两端联调
         └─ 修 bug
-
-Day 5:  清理
-        ├─ 加 cron 清理过期房间（每 6h 跑一次）
-        ├─ 加速率限制
-        └─ 加错误处理
 ```
 
 ---
 
 ## 10. 待定问题
 
-- [ ] 域名：要不要买 `shenghen.app` 或类似？用 `workers.dev` 子域名也行。
+- [ ] 域名：要不要买 `sheng.example.app` 或类似？用 `workers.dev` 子域名也行。
 - [ ] 4p 上不上：v0.3 只做 2p 真分享，4p 暂留 pass-and-play。
 - [ ] 二维码：用 `qrcode.js`（~10KB）还是手写 SVG？建议直接 CDN。
 - [ ] 轮询 vs SSE：v0.3 轮询够了，v0.4 再看。
@@ -269,3 +337,5 @@ Day 5:  清理
 2. **4p 范围** — v0.3 只做 2p 真分享？4p 留 v0.4？
 3. **速率限制** — 简单 IP 限流够用？还是想用 Cloudflare Turnstile？
 4. **部署时机** — 测完 2p v0.1 立刻开始？还是先把词库 / 时限调好再做？
+5. **持久化策略** — 4.5 节列了 v0.3/v0.4/v1.0 三档。先做哪档？
+6. **cron vs 惰性删除** — 付费 Workers（$5/月）拿 cron，还是用惰性删除节省？

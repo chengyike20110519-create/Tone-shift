@@ -1,0 +1,58 @@
+/* two-player.css — Tone-shift
+ * 自动从 index.html 抽出。手动编辑请确认其他文件不受影响。
+ */
+.twoP-shell{display:flex;flex-direction:column;align-items:stretch;gap:18px;max-width:780px;width:100%;padding:24px;overflow-y:auto}
+.twoP-header{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.twoP-title{font-size:22px;font-weight:700;line-height:1.3}
+.twoP-song{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.twoP-hint{font-size:12px;color:var(--muted);letter-spacing:0.04em}
+.twoP-bank{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;
+  padding:16px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--line);
+  max-height:42vh;overflow-y:auto;
+}
+.word-btn{
+  padding:8px 14px;border-radius:6px;
+  background:rgba(255,255,255,0.06);border:1px solid var(--line);
+  color:var(--text);font-size:14px;cursor:pointer;transition:all .12s ease;
+  font-family:inherit;
+}
+.word-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(120,216,210,0.4)}
+.word-btn.selected{background:rgba(120,216,210,0.25);border-color:var(--teal);color:var(--teal);font-weight:600}
+.word-btn[disabled]{opacity:0.4;cursor:not-allowed}
+.twoP-actions{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:4px}
+.twoP-counter{font-size:14px;color:var(--muted)}
+.twoP-counter span{color:var(--teal);font-weight:700;font-size:18px}
+
+.twoP-banner{padding:16px 18px;border-radius:8px;background:rgba(120,216,210,0.08);border:1px solid rgba(120,216,210,0.3)}
+.twoP-words{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.twoP-words .word-chip{padding:6px 14px;border-radius:6px;background:var(--teal);color:#08101a;font-weight:700;font-size:15px}
+
+.twoP-paint-wrap{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.twoP-paint-tools{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.stroke-chip{padding:5px 10px;border-radius:4px;background:rgba(255,255,255,0.06);border:1px solid var(--line);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stroke-chip.warn{color:var(--amber);border-color:rgba(255,179,107,0.5)}
+.stroke-chip.full{color:#ff6b6b;border-color:rgba(255,107,107,0.5)}
+
+#twoPCanvas{
+  flex:1;min-height:300px;width:100%;
+  background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:8px;
+  touch-action:none;cursor:crosshair;display:block;
+}
+.twoP-palette{justify-content:center;padding:8px}
+
+.twoP-reveal-title{text-align:center;margin-bottom:6px}
+.twoP-reveal-title h2{font-size:22px;margin-top:4px}
+.twoP-reveal-grid{display:grid;grid-template-columns:1fr 1.6fr;gap:14px;width:100%}
+@media (max-width:600px){.twoP-reveal-grid{grid-template-columns:1fr}}
+.reveal-card{padding:16px;border-radius:8px;background:var(--panel);border:1px solid var(--line)}
+.reveal-label{font-size:11px;color:var(--muted);letter-spacing:0.06em;margin-bottom:10px}
+.reveal-words{display:flex;flex-wrap:wrap;gap:8px}
+.reveal-words .word-chip{padding:6px 14px;border-radius:6px;background:rgba(120,216,210,0.2);color:var(--teal);font-weight:700;font-size:15px}
+.reveal-art{aspect-ratio:1.5;background:rgba(0,0,0,0.2);border-radius:6px;overflow:hidden}
+.reveal-art canvas{width:100%;height:100%;display:block}
+.reveal-caption{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;margin-top:4px}
+.twoP-reveal-actions{display:flex;justify-content:center;gap:12px;margin-top:8px}
+
+
+

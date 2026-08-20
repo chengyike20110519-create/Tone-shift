@@ -1,0 +1,11 @@
+{
+  "name": "tone-shift-server",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "description": "Tone-Shift 后端：Node 内置 http + JSON 文件 DB，提供 REST API 给前端；前端 IndexedDB 与此后端完全物理隔离。"
+}

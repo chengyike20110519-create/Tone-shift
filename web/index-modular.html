@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!-- VERSION 2026-08-19-v3 (声痕库 · 连续打卡 · 标题输入) -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tone-Shift · 音变</title>
+<link rel="stylesheet" href="styles/tokens.css?v=20260819v3">
+<link rel="stylesheet" href="styles/free-draw.css?v=20260819v3">
+<link rel="stylesheet" href="styles/hub.css?v=20260819v3">
+<link rel="stylesheet" href="styles/two-player.css?v=20260819v3">
+<link rel="stylesheet" href="styles/one-vs-one.css?v=20260819v3">
+<link rel="stylesheet" href="styles/memory-archaeology.css?v=20260819v3">
+<link rel="stylesheet" href="styles/social.css?v=20260819v3">
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="newBanner" style="position:fixed;top:0;left:0;right:0;z-index:9999;padding:12px 20px;background:linear-gradient(90deg,#ff6b6b,#a78bfa,#78d8d2);color:#fff;text-align:center;font-weight:700;font-size:14px;letter-spacing:0.06em;box-shadow:0 4px 18px rgba(0,0,0,0.4);font-family:'PingFang SC','Microsoft YaHei',sans-serif">
+  Tone-Shift · 前后端分离 · 字典与数据由本地后端提供 · 找不到请按 ⌘+⇧+R 硬刷新
+</div>
+<canvas id="paintCanvas"></canvas>
+<div id="debug" style="position:fixed;left:12px;bottom:10px;z-index:3;font-size:11px;color:rgba(255,255,255,0.45);font-family:monospace;pointer-events:none;letter-spacing:0"></div>
+<div id="ui">
+<section id="hubScreen" class="screen">
+    <div class="hub-shell">
+      <div class="hub-brand">
+        <div class="title-orb"></div>
+        <h1 class="brand">Tone-Shift</h1>
+        <p class="chapter">音变 · 声痕 · Sound Mark</p>
+        <p class="hub-streak" id="hubStreak">连续打卡 0 天</p>
+      </div>
+      <div class="hub-grid">
+        <button class="mode-tile" data-mode="free-draw">
+          <div class="mode-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+          <div class="mode-info">
+            <h3 class="mode-name">自由听画</h3>
+            <p class="mode-desc">听一首歌，画出你听到的</p>
+          </div>
+          <span class="mode-badge ready">可玩</span>
+        </button>
+        <button class="mode-tile" data-mode="one-vs-one">
+          <div class="mode-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="6" cy="8" r="2.5"/>
+              <circle cx="18" cy="8" r="2.5"/>
+              <path d="M3 18v-2a3 3 0 0 1 3-3h0"/>
+              <path d="M21 18v-2a3 3 0 0 0-3-3h0"/>
+              <path d="M9 8h6"/>
+            </svg>
+          </div>
+          <div class="mode-info">
+            <h3 class="mode-name">单人传声</h3>
+            <p class="mode-desc">你 + 2-3 个 AI 听友接力</p>
+          </div>
+          <span class="mode-badge ready">v0.1</span>
+        </button>
+        <button class="mode-tile" data-mode="memory-archaeology">
+          <div class="mode-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6"/>
+              <line x1="20" y1="20" x2="15.5" y2="15.5"/>
+              <path d="M11 8v3"/>
+              <path d="M11 13v.01"/>
+            </svg>
+          </div>
+          <div class="mode-info">
+            <h3 class="mode-name">记忆考古</h3>
+            <p class="mode-desc">画出旋律轮廓，找回那首歌</p>
+          </div>
+          <span class="mode-badge ready">v0.1</span>
+        </button>
+        <button class="mode-tile mode-tile-streak" data-mode="gallery">
+          <div class="mode-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="9" cy="9" r="2"/>
+              <path d="m21 15-5-5L5 21"/>
+            </svg>
+          </div>
+          <div class="mode-info">
+            <h3 class="mode-name">声痕库</h3>
+            <p class="mode-desc">翻看画过的 · 你留下的</p>
+          </div>
+          <span class="mode-badge ready" id="galleryHubBadge" style="background:rgba(255,107,107,0.95);color:#fff">0 张 · NEW</span>
+        </button>
+        <button class="mode-tile" data-mode="social-hub">
+          <div class="mode-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="9" cy="8" r="3"/>
+              <circle cx="17" cy="9" r="2.5"/>
+              <path d="M3 19v-1a5 5 0 0 1 5-5h2"/>
+              <path d="M14 13h1a5 5 0 0 1 5 5v1"/>
+              <path d="M19 4l.6 1.4L21 6l-1.4.6L19 8l-.6-1.4L17 6l1.4-.6z"/>
+            </svg>
+          </div>
+          <div class="mode-info">
+            <h3 class="mode-name">社交广场</h3>
+            <p class="mode-desc">同频匹配 · 情绪广场 · 话题</p>
+          </div>
+          <span class="mode-badge ready">v0.1</span>
+        </button>
+        <button class="mode-tile" data-mode="two-player">
+          <div class="mode-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div class="mode-info">
+            <h3 class="mode-name">双人传声</h3>
+            <p class="mode-desc">和朋友接力画 · v0.3 房间流</p>
+          </div>
+          <span class="mode-badge soon">v0.3</span>
+        </button>
+      </div>
+      <p class="hub-foot">更多模式 · 敬请期待</p>
+    </div>
+  </section>
+<section id="titleScreen" class="screen hidden">
+    <div class="title-orb"></div>
+    <h1 class="brand">声痕</h1>
+    <p class="chapter">序章 · 旧手机里的第一首歌</p>
+    <button id="startBtn" class="btn primary" style="margin-top:30px" aria-label="开始听歌">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      开始听歌
+    </button>
+    <button id="quickPaintBtn" class="btn ghost small" style="margin-top:10px">直接开始画</button>
+    <p class="hint-note">建议戴上耳机 · 全程约 40 秒</p>
+  </section>
+<section id="storyScreen" class="screen hidden">
+    <div class="story-card">
+      <p class="kicker">雨夜 · 长椅</p>
+      <p class="story-text">你在长椅上捡到一部旧手机。<br>锁屏上只有一行字：<br><em>“替我把这首歌听完。”</em><br>手机里只剩一首歌。</p>
+      <button id="storyNextBtn" class="btn">继续</button>
+    </div>
+  </section>
+<section id="listenScreen" class="screen hidden">
+    <div class="listen-core">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 120 120" class="ring" aria-hidden="true">
+          <circle cx="60" cy="60" r="54" class="ring-bg"></circle>
+          <circle id="ringFg" cx="60" cy="60" r="54" class="ring-fg"></circle>
+        </svg>
+        <div class="ring-center"><span id="listenCount">16</span></div>
+      </div>
+      <h2 class="listen-title">闭上眼睛，听。</h2>
+      <p class="muted">前奏结束前，不用做任何事。</p>
+      <button id="skipIntroBtn" class="btn ghost">我准备好了</button>
+    </div>
+  </section>
+<section id="paintScreen" class="screen hidden">
+    <div class="streak-badge" id="streakBadge">连续打卡 0 天</div>
+    <div class="paint-top">
+      <div class="phase-chip">副歌 · 画下来</div>
+      <div class="paint-tools">
+        <button id="muteBtn" class="icon-btn" aria-label="静音" title="静音"></button>
+        <button id="undoBtn" class="icon-btn" aria-label="撤销" title="撤销">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+        </button>
+        <button id="clearBtn" class="icon-btn" aria-label="清空" title="清空">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17.5 4.5 2 2L8 18l-4-1-1-4z"/><path d="m10 8 6 6"/></svg>
+        </button>
+        <div class="timer-chip"><span id="paintCount">18</span>s</div>
+      </div>
+    </div>
+    <div id="paintHint">按住拖动，跟着歌画</div>
+    <div class="palette" id="palette"></div>
+    <button id="finishEarlyBtn" class="btn ghost small">提前完成</button>
+  </section>
+<section id="resultScreen" class="screen hidden">
+    <div class="result-layout">
+      <div class="result-art">
+        <div class="art-frame"><canvas id="resultArt"></canvas></div>
+        <div class="art-caption">声痕 · 旧手机里的第一首歌</div>
+      </div>
+      <div class="result-panel">
+        <p class="kicker">你的声痕</p>
+        <h2 id="resultMood">交错</h2>
+        <div class="swatches" id="swatches"></div>
+        <div id="endingList"></div>
+        <div class="stat-row" id="statRow"></div>
+        <label class="title-input-row">
+          <span>给这张卡起个名字</span>
+          <input type="text" id="resultTitle" maxlength="20" placeholder="此刻的歌…" />
+        </label>
+        <div class="privacy-row">
+          <span>可见范围</span>
+          <div class="privacy-seg" id="resultPrivacy">
+            <button type="button" class="privacy-opt active" data-privacy="public">公开</button>
+            <button type="button" class="privacy-opt" data-privacy="private">私密</button>
+          </div>
+        </div>
+        <div class="streak-row" id="resultStreak">连续打卡 0 天</div>
+        <div class="result-actions">
+          <button id="saveBtn" class="btn primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
+            保存这张声痕
+          </button>
+          <button id="galleryBtn" class="btn ghost" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+            我的声痕
+          </button>
+          <button id="replayBtn" class="btn ghost">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+            再画一次
+          </button>
+          <button id="homeBtn" class="btn ghost">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            回到首页
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="galleryScreen" class="screen hidden">
+  <div class="gallery-shell">
+    <div class="gallery-header">
+      <p class="kicker">声痕库</p>
+      <h2 class="gallery-title">你留下的歌</h2>
+      <p class="gallery-count" id="galleryCount">0 张卡</p>
+    </div>
+    <div class="gallery-grid" id="galleryGrid"></div>
+    <div class="gallery-empty" id="galleryEmpty" hidden>
+      <p>还没有声痕</p>
+      <p class="muted">先回首页画一张吧</p>
+    </div>
+    <div class="gallery-actions">
+      <button id="galleryHomeBtn" class="btn primary">回到首页</button>
+    </div>
+  </div>
+</section>
+<section id="twoPA" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="twoP-header">
+        <p class="kicker">双人传声 · A 的回合</p>
+        <h2 class="twoP-title">听歌，然后从词库选 3 个词</h2>
+      </div>
+      <div class="twoP-song">
+        <button id="twoPPlayBtn" class="btn primary" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          听 30s
+        </button>
+        <button id="twoPSkipBtn" class="btn ghost small" type="button" style="display:none">跳过</button>
+        <div class="timer-chip"><span id="twoPATime">30</span>s</div>
+      </div>
+      <p class="twoP-hint">下面 37 个词，至少扫一眼，凭直觉点 3 个</p>
+      <div class="twoP-bank" id="twoPBank"></div>
+      <div class="twoP-actions">
+        <p class="twoP-counter">已选 <span id="twoPACount">0</span> / 3</p>
+        <button id="twoPSubmitBtn" class="btn primary" type="button" disabled>传给 B →</button>
+      </div>
+    </div>
+  </section>
+<section id="twoPB" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="twoP-banner">
+        <p class="kicker">B 的回合 · A 选了</p>
+        <div class="twoP-words" id="twoPBWords"></div>
+      </div>
+      <div class="twoP-paint-wrap">
+        <div class="twoP-paint-tools">
+          <div class="timer-chip"><span id="twoPBTime">30</span>s</div>
+          <div class="stroke-chip"><span id="twoPBStrokes">0</span> / 15 笔</div>
+        </div>
+        <canvas id="twoPCanvas"></canvas>
+        <div class="palette twoP-palette" id="twoPPalette"></div>
+      </div>
+    </div>
+  </section>
+<section id="twoPReveal" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="twoP-reveal-title">
+        <p class="kicker">双人传声 · 漂移</p>
+        <h2>A 选了 → B 画了</h2>
+      </div>
+      <div class="twoP-reveal-grid">
+        <div class="reveal-card">
+          <p class="reveal-label">A 的 3 词</p>
+          <div class="reveal-words" id="twoPRevealWords"></div>
+        </div>
+        <div class="reveal-card">
+          <p class="reveal-label">B 的画</p>
+          <div class="reveal-art">
+            <canvas id="twoPRevealCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+      <p class="reveal-caption">A 听到的是 30s 程序合成氛围，B 只能从 3 个词脑补画面。词是压缩，画是展开 — 漂移在这里。</p>
+      <div class="twoP-reveal-actions">
+        <button id="twoPPlayMusicBtn" class="btn primary" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          听 20s 共创音乐
+        </button>
+        <button id="twoPDownloadBtn" class="btn ghost" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          下载图卡
+        </button>
+        <button id="twoPRetryBtn" class="btn primary" type="button">再来一次</button>
+        <button id="twoPHomeBtn" class="btn ghost" type="button">回到首页</button>
+      </div>
+    </div>
+  </section>
+<section id="oneVsOneStartScreen" class="screen hidden">
+    <div class="one-shell">
+      <p class="kicker">单人传声 · 1.1</p>
+      <h2 class="one-title">选你的位置</h2>
+      <p class="one-hint">4 个位置里选 1 个，剩下的由 AI 听友填</p>
+      <div class="one-pos-grid" id="onePosGrid">
+        <button class="one-pos-tile" data-pos="0"><div class="one-pos-num">1</div><div class="one-pos-task">听歌选词</div></button>
+        <button class="one-pos-tile" data-pos="1"><div class="one-pos-num">2</div><div class="one-pos-task">看词画图</div></button>
+        <button class="one-pos-tile" data-pos="2"><div class="one-pos-num">3</div><div class="one-pos-task">看图选词</div></button>
+        <button class="one-pos-tile" data-pos="3"><div class="one-pos-num">4</div><div class="one-pos-task">看词画图</div></button>
+      </div>
+      <h2 class="one-title" style="margin-top:24px">选 2-3 个 AI 听友</h2>
+      <p class="one-hint">每个听友有自己的「听感偏好」，影响选词和画风</p>
+      <div class="one-pers-grid" id="onePersGrid">
+        <button class="one-pers-tile" data-personality="nostalgic"><div class="one-pers-name">怀旧收集者</div><div class="one-pers-desc">老歌和年代联想</div></button>
+        <button class="one-pers-tile" data-personality="rational"><div class="one-pers-name">理性乐评人</div><div class="one-pers-desc">更关注节奏和结构</div></button>
+        <button class="one-pers-tile" data-personality="visual"><div class="one-pers-name">视觉系玩家</div><div class="one-pers-desc">根据颜色和画面理解</div></button>
+        <button class="one-pers-tile" data-personality="absurd"><div class="one-pers-name">荒诞派</div><div class="one-pers-desc">产生搞笑但有趣的漂移</div></button>
+        <button class="one-pers-tile" data-personality="empathic"><div class="one-pers-name">共情型听众</div><div class="one-pers-desc">关注歌词和情绪</div></button>
+      </div>
+      <div class="one-start-row">
+        <button id="oneStartBtn" class="btn primary" disabled>开始 →</button>
+      </div>
+    </div>
+  </section>
+<section id="oneWordHopScreen" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="one-hop-header">
+        <p class="kicker" id="oneWordHopKicker">位置 1 · 你的回合</p>
+        <h2 class="twoP-title">听歌，然后选 3 个词</h2>
+      </div>
+      <p class="twoP-hint">下面 37 个词，凭直觉点 3 个</p>
+      <div class="twoP-bank" id="oneWordBank"></div>
+      <div class="twoP-actions">
+        <p class="twoP-counter">已选 <span id="oneWordCount">0</span> / 3</p>
+        <button id="oneWordSubmitBtn" class="btn primary" disabled>传给下一位 →</button>
+      </div>
+    </div>
+  </section>
+<section id="oneDrawHopScreen" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="one-hop-header">
+        <p class="kicker" id="oneDrawHopKicker">位置 2 · 你的回合</p>
+        <h2 class="twoP-title">看词画图</h2>
+      </div>
+      <div class="twoP-banner">
+        <p class="kicker" id="oneDrawHopInputLabel">上一位选了</p>
+        <div class="twoP-words" id="oneDrawHopWords"></div>
+      </div>
+      <div class="twoP-paint-wrap">
+        <div class="twoP-paint-tools">
+          <div class="timer-chip"><span id="oneDrawTime">30</span>s</div>
+          <div class="stroke-chip"><span id="oneDrawStrokes">0</span> / 15 笔</div>
+        </div>
+        <canvas id="oneCanvas"></canvas>
+        <div class="palette twoP-palette" id="onePalette"></div>
+      </div>
+    </div>
+  </section>
+<section id="oneAIScreen" class="screen hidden">
+    <div class="one-ai-shell">
+      <div class="one-ai-pulse">
+        <div class="one-ai-orb"></div>
+      </div>
+      <p class="kicker" id="oneAiKicker">位置 2 · AI 听友</p>
+      <h2 class="one-ai-name" id="oneAiName">怀旧收集者</h2>
+      <p class="one-ai-task" id="oneAiTask">正在选词...</p>
+    </div>
+  </section>
+<section id="oneRevealScreen" class="screen hidden">
+    <div class="twoP-shell">
+      <div class="twoP-reveal-title">
+        <p class="kicker">单人传声 · 漂移</p>
+        <h2>你和 AI 听友的接力</h2>
+      </div>
+      <div class="one-reveal-chain" id="oneRevealChain"></div>
+      <p class="reveal-caption">4 跳接力 — 你在哪一格？</p>
+      <div class="twoP-reveal-actions">
+        <button id="onePlayMusicBtn" class="btn primary">▶ 听 20s 共创音乐</button>
+        <button id="oneDownloadBtn" class="btn ghost">下载图卡</button>
+        <button id="oneRetryBtn" class="btn ghost">再来一次</button>
+       <button id="oneHomeBtn" class="btn ghost">回到首页</button>
+     </div>
+   </div>
+ </section>
+
+<section id="memArchScreen" class="screen hidden">
+  <div class="twoP-shell">
+    <div class="twoP-header">
+      <p class="kicker">记忆考古 · 1.2</p>
+      <h2 class="twoP-title">画出那段旋律</h2>
+      <p class="twoP-hint">画得歪反而更有趣 —— 找回那首你想不起的歌</p>
+    </div>
+
+    <div id="memStep1">
+      <div class="memArch-canvas-wrap">
+        <canvas id="memArchCanvas"></canvas>
+        <p id="memArchHint" class="memArch-hint">按住拖动开始画</p>
+      </div>
+      <div class="memArch-actions">
+        <button id="memArchClear" class="btn ghost small">清空</button>
+        <button id="memArchNext" class="btn primary" disabled>选颜色/年代 →</button>
+      </div>
+    </div>
+
+    <div id="memStep2" class="hidden">
+      <h3 class="memArch-section-title">情绪颜色</h3>
+      <div class="memArch-color-pick" id="memColorPick"></div>
+      <h3 class="memArch-section-title">年代</h3>
+      <div class="memArch-era-pick" id="memEraPick"></div>
+      <div class="memArch-actions">
+        <button id="memArchBack" class="btn ghost small">← 重画</button>
+        <button id="memArchSearch" class="btn primary">找这首歌 →</button>
+      </div>
+    </div>
+
+    <div id="memStep3" class="hidden">
+      <p class="twoP-hint" style="text-align:center;">候选歌名来自后端 mock_songs 字典，v0.2 起接 QQ / 网易云搜索</p>
+      <div class="memArch-results" id="memResults"></div>
+      <div class="memArch-actions">
+        <button id="memArchRetry" class="btn ghost">再试一次</button>
+        <button id="memArchHome" class="btn primary">回到首页</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="socialHubScreen" class="screen hidden">
+  <div class="social-shell">
+    <div class="social-header">
+      <p class="kicker">社交广场</p>
+      <h2 class="social-title">同频 · 看见别人</h2>
+      <button id="socialHomeBtn" class="btn ghost small">回到首页</button>
+    </div>
+    <div class="social-grid">
+      <section class="social-panel">
+        <h3>同频匹配</h3>
+        <p class="muted">和你画得像的人</p>
+        <div id="matchList" class="match-list"></div>
+      </section>
+      <section class="social-panel">
+        <h3>本周话题</h3>
+        <p class="muted" id="topicTitle">加载中…</p>
+        <p class="social-topic-prompt" id="topicPrompt"></p>
+      </section>
+      <section class="social-panel">
+        <h3>情绪广场</h3>
+        <p class="muted">公开的声痕</p>
+        <div id="publicGallery" class="public-gallery"></div>
+      </section>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

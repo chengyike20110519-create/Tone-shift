@@ -1,0 +1,43 @@
+/* hub.css — Tone-shift
+ * 自动从 index.html 抽出。手动编辑请确认其他文件不受影响。
+ */
+.hub-shell{display:flex;flex-direction:column;align-items:center;gap:36px;max-width:680px;width:100%}
+.hub-brand{display:flex;flex-direction:column;align-items:center}
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;width:100%}
+.mode-tile{
+  position:relative;display:flex;align-items:center;gap:16px;
+  padding:18px 20px;border-radius:10px;
+  background:var(--panel);border:1px solid var(--line);
+  text-align:left;cursor:pointer;transition:transform .15s ease,border-color .15s ease,background .15s ease;
+  font-family:inherit;color:var(--text);
+}
+.mode-tile:hover:not([disabled]){transform:translateY(-2px);border-color:rgba(120,216,210,0.45);background:rgba(255,255,255,0.06)}
+.mode-tile[disabled]{cursor:not-allowed;opacity:0.62}
+.mode-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(120,216,210,0.12);color:var(--teal);flex-shrink:0}
+.mode-icon svg{width:24px;height:24px}
+.mode-info{flex:1;min-width:0}
+.mode-name{font-size:18px;font-weight:700;margin-bottom:2px}
+.mode-desc{font-size:13px;color:var(--muted);line-height:1.4}
+.mode-badge{
+  position:absolute;top:12px;right:12px;
+  padding:3px 8px;border-radius:4px;
+  font-size:11px;font-weight:600;letter-spacing:0.04em;
+}
+.mode-badge.ready{background:rgba(120,216,210,0.18);color:var(--teal)}
+.mode-badge.soon{background:rgba(139,147,167,0.18);color:var(--muted)}
+.hub-foot{margin-top:8px;font-size:12px;color:var(--muted);letter-spacing:0.04em}
+.hub-streak{
+  margin-top:10px;display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:999px;
+  background:rgba(255,179,107,0.10);border:1px solid rgba(255,179,107,0.28);
+  color:var(--amber);font-size:12px;letter-spacing:0.04em;
+}
+.mode-tile-streak{
+  background:linear-gradient(135deg,rgba(255,179,107,0.08),rgba(167,139,250,0.06));
+  border-color:rgba(255,179,107,0.22);
+}
+.mode-tile-streak:hover:not([disabled]){
+  border-color:var(--amber);
+  background:linear-gradient(135deg,rgba(255,179,107,0.14),rgba(167,139,250,0.10));
+}
+

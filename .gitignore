@@ -1,4 +1,49 @@
+# OS
 .DS_Store
+Thumbs.db
 *.swp
 *.swo
 *~
+
+# Editor / IDE
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# Node / package managers
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build output
+dist/
+build/
+.wrangler/
+*.tsbuildinfo
+
+# Secrets / env
+.env
+.env.local
+.env.*.local
+
+# Wrangler (Cloudflare Worker, v0.3)
+.wrangler/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Local runtime data (用户跑出来的 db，会越积越大)
+server/data/
+!.gitkeep
